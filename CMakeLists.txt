@@ -8,13 +8,15 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Dependencies that can be automatically found by CMake.
 
-find_package(JPEG)
-find_package(PNG)
-find_package(TIFF)
-find_package(TooN)
-find_package(X11)
-find_package(dc1394v2)
-find_package(OpenGL)
+if(NOT HUNTER_ENABLED)
+    find_package(JPEG)
+    find_package(PNG)
+    find_package(TIFF)
+    find_package(TooN)
+    find_package(X11)
+    find_package(dc1394v2)
+    find_package(OpenGL)
+endif()
 
 # Detect endianness
 
@@ -220,7 +222,8 @@ else()
     #I'm not really sure this is the correct solution?
 	#This will always force the compiler into c++14 mode
 	#even if it's in C++17 mode, I think.
-	add_compile_options(--std=c++14)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_EXTENSIONS OFF)
 
 	list(APPEND SRCS
 		cvd_src/globlist.cxx)
@@ -311,19 +314,32 @@ endif()
 configure_file(cmake/config.h.in include/cvd/config.h)
 configure_file(cmake/config_internal.h.in include/cvd_src/config_internal.h)
 
-set(CMAKE_DEBUG_POSTFIX _debug)
 include_directories("${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/include")
 add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
 
-install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(EXPORT ${PROJECT_NAME}Targets DESTINATION lib/cmake/${PROJECT_NAME} NAMESPACE CVD::)
 foreach(file ${HEADERS})
 	get_filename_component(dir ${file} DIRECTORY)
 	install(FILES ${file} DESTINATION include/${dir})
 endforeach()
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/cvd DESTINATION include)
-install(FILES ${PROJECT_SOURCE_DIR}/cmake/CVDConfig.cmake DESTINATION cmake)
 
-add_subdirectory(tests)
-add_subdirectory(progs)
-add_subdirectory(examples)
+include(CMakePackageConfigHelpers)
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
+configure_package_config_file(
+    "cmake/CVDConfig.cmake.in"
+    "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "lib/cmake/${CMAKE_PROJECT_NAME}"
+)
+install(FILES
+        ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
+        DESTINATION "lib/cmake/${CMAKE_PROJECT_NAME}")
+
+if(NOT HUNTER_ENABLED)
+    add_subdirectory(tests)
+    add_subdirectory(progs)
+    add_subdirectory(examples)
+endif()
 
