@@ -316,6 +316,9 @@ configure_file(cmake/config_internal.h.in include/cvd_src/config_internal.h)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/include")
 add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
