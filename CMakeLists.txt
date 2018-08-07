@@ -15,8 +15,8 @@ if(NOT HUNTER_ENABLED)
     find_package(TooN)
     find_package(X11)
     find_package(dc1394v2)
-    find_package(OpenGL)
 endif()
+find_package(OpenGL)
 
 # Detect endianness
 
